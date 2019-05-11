@@ -22,9 +22,18 @@ class DetailUserSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'matchable', 'current_location', 'other_user']
 
 
-class UpdateUserSerializer(serializers.ModelSerializer):
+class SimpleUserSerializer(serializers.ModelSerializer):
     current_location = LocationSerializer(many=False)
 
     class Meta:
         model = User
         fields = ['matchable', 'current_location']
+
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    current_location = LocationSerializer(many=False)
+    other_user = SimpleUserSerializer(many=False)
+
+    class Meta:
+        model = User
+        fields = ['matchable', 'current_location', 'other_user']
