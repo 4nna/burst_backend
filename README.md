@@ -2,4 +2,4 @@
 
 ## User
 * user: test
-* password: testga
+* password: test
