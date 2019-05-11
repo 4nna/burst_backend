@@ -2,9 +2,7 @@ from collections import deque
 
 from django.contrib.auth import get_user_model
 from rest_framework import status, generics, permissions, mixins
-from rest_framework.decorators import renderer_classes
 from rest_framework.response import Response
-from rest_framework_swagger.renderers import SwaggerUIRenderer
 
 from location.models import Location
 from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
@@ -68,18 +66,18 @@ class Register(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
 
-    @renderer_classes([SwaggerUIRenderer])
     def post(self, request, *args, **kwargs):
         """
         Create a new user with email, username, password
         """
         serialized = RegisterUserSerializer(data=request.data)
         if serialized.is_valid():
-            User.objects.create_user(
-                serialized.data['email'],
-                serialized.data['username'],
-                serialized.data['password']
+            user = User.objects.create_user(
+                email=serialized.data['email'],
+                username=serialized.data['username'],
+                password=serialized.data['password']
             )
-            return Response(serialized.data, status=status.HTTP_201_CREATED)
+            user.save()
+            return Response("User created successfully", status=status.HTTP_201_CREATED)
         else:
             return Response(serialized.errors, status=status.HTTP_400_BAD_REQUEST)

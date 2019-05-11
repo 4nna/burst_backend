@@ -11,3 +11,6 @@ class User(AbstractUser):
                                             on_delete=models.CASCADE,
                                             default=None, null=True,
                                             blank=True)
+
+    def __str__(self):
+        return self.username
