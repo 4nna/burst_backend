@@ -13,9 +13,13 @@ available_users = deque()
 
 
 class CountOnline(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UpdateUserSerializer
     """
     Number of users who are matchable in the meeting zone
     """
+
     def get(self, request, *args, **kwargs):
         """
         Number of users who are matchable in the meeting zone
