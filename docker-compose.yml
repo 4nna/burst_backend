@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  web:
+    container_name: burst-backend
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    restart: always
+    volumes:
+      - .:/code
+    ports:
+      - "14000:8000"
