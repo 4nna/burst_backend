@@ -1,0 +1,24 @@
+[
+  {
+    "model": "user.User",
+    "pk": 1,
+    "fields": {
+      "name": "foobar",
+      "username": "foobar",
+      "email": "foobar@foobar.de",
+      "matchable": false,
+      "current_location": null
+    }
+  },
+  {
+    "model": "user.User",
+    "pk": 10,
+    "fields": {
+      "name": "test",
+      "username": "test",
+      "email": "test@test.de",
+      "matchable": true,
+      "current_location": null
+    }
+  }
+]

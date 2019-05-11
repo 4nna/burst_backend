@@ -1,0 +1,10 @@
+[
+  {
+    "model": "location.Location",
+    "pk": 1,
+    "fields": {
+      "longtitude": 13,
+      "latitude": 52
+    }
+  }
+]

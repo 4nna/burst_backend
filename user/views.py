@@ -18,10 +18,7 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
 
     def post(self, request, *args, **kwargs):
         """
-        This method can only be called when user is authenticated (That means
-        the request has an a authorization header in the request.
-
-        Update status and current location of user
+        Update status and current location of user. Authentication required.
         """
         if not request.user.is_authenticated:
             return HttpResponse(status=400)
@@ -42,10 +39,7 @@ class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         """
-        This method can only be called when user is authenticated (That means
-        the request has an a authorization header in the request.
-
-        Return detail of every user
+        Return detail of every user. Authentication required.
         """
         if not request.user.is_authenticated:
             return HttpResponse(status=400)
