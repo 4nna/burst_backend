@@ -13,10 +13,10 @@ class User(AbstractUser):
                                             on_delete=models.CASCADE,
                                             default=None, null=True,
                                             blank=True)
-    other_user = models.ForeignKey('self',
-                                   on_delete=models.DO_NOTHING,
-                                   default=None,
-                                   null=True)
+    other_user = models.OneToOneField('self',
+                                      on_delete=models.DO_NOTHING,
+                                      default=None,
+                                      null=True)
 
     def __str__(self):
         return self.username
