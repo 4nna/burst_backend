@@ -1,11 +1,16 @@
-from django.contrib.auth import get_user_model
-from django.http import HttpResponse
-from rest_framework import status, generics, permissions, mixins
-from rest_framework.response import Response
+from collections import deque
 
+from django.contrib.auth import get_user_model
+from rest_framework import status, generics, permissions, mixins
+from rest_framework.decorators import renderer_classes
+from rest_framework.response import Response
+from rest_framework_swagger.renderers import SwaggerUIRenderer
+
+from location.models import Location
 from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
 
 User = get_user_model()
+available_users = deque()
 
 
 class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
@@ -18,21 +23,24 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
 
     def post(self, request, *args, **kwargs):
         """
-        This method can only be called when user is authenticated (That means
-        the request has an a authorization header in the request.
-
-        Update status and current location of user
+        Update status and current location of user. Authentication required.
         """
         if not request.user.is_authenticated:
-            return HttpResponse(status=400)
-        serialized = UpdateUserSerializer(request.data)
+            return Response("You have to log yourself in", status=403)
+        serialized = UpdateUserSerializer(data=request.data)
         if serialized.is_valid():
-            serialized.save()
-            return HttpResponse(status=200)
-        return HttpResponse(status=400)
+            user = request.user
+            user.matchable = serialized['matchable']
+            user.current_location = Location(serialized['current_location'])
+            user.save()
+            if len(available_users) > 0:
+                candidate = deque.pop(available_users)
+            else:
+                return Response("There are currently no user around", status=200)
+        return Response("An error has happened, please try again!", status=400)
 
 
-class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
+class Detail(mixins.RetrieveModelMixin, generics.GenericAPIView):
     """
     Get user's detail after logging in
     """
@@ -42,17 +50,14 @@ class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         """
-        This method can only be called when user is authenticated (That means
-        the request has an a authorization header in the request.
-
-        Return detail of every user
+        Return detail of every user. Authentication required.
         """
         if not request.user.is_authenticated:
-            return HttpResponse(status=400)
-        id = request.GET.get('id', None)
-        if id is not None:
-            return self.retrieve(request, *args, **kwargs)
-        return super().get(request, *args, **kwargs)
+            return Response("Please authenticate yourself", status=403)
+        else:
+            user = self.queryset.get(username=request.user)
+            serialized = DetailUserSerializer(user)
+            return Response(data=serialized.data, status=200)
 
 
 class Register(generics.CreateAPIView):
@@ -63,6 +68,7 @@ class Register(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
 
+    @renderer_classes([SwaggerUIRenderer])
     def post(self, request, *args, **kwargs):
         """
         Create a new user with email, username, password
@@ -70,9 +76,9 @@ class Register(generics.CreateAPIView):
         serialized = RegisterUserSerializer(data=request.data)
         if serialized.is_valid():
             User.objects.create_user(
-                serialized.init_data['email'],
-                serialized.init_data['username'],
-                serialized.init_data['password']
+                serialized.data['email'],
+                serialized.data['username'],
+                serialized.data['password']
             )
             return Response(serialized.data, status=status.HTTP_201_CREATED)
         else:
