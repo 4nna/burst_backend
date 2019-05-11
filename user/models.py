@@ -9,4 +9,7 @@ from location.models import Location
 class User(AbstractUser):
     name = models.CharField(max_length=100, blank=True, null=True)
     matchable = models.BooleanField(default=False)
-    current_location = models.ForeignKey(Location, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    current_location = models.OneToOneField(Location,
+                                            on_delete=models.CASCADE,
+                                            default=None, null=True,
+                                            blank=True)
