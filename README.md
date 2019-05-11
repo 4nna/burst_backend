@@ -3,3 +3,8 @@
 ## User
 * user: test
 * password: test
+
+## Location
+* longtitude: 15
+* latitude: 15
+* radius: 5km

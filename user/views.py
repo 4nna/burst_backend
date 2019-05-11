@@ -1,9 +1,8 @@
-import json
+from collections import deque
 
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
 from rest_framework import status, generics, permissions, mixins
-from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.decorators import renderer_classes
 from rest_framework.response import Response
 from rest_framework_swagger.renderers import SwaggerUIRenderer
 
@@ -11,6 +10,7 @@ from location.models import Location
 from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
 
 User = get_user_model()
+available_users = deque()
 
 
 class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
@@ -33,7 +33,10 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
             user.matchable = serialized['matchable']
             user.current_location = Location(serialized['current_location'])
             user.save()
-            return Response(serialized, status=200)
+            if len(available_users) > 0:
+                candidate = deque.pop(available_users)
+            else:
+                return Response("There are currently no user around", status=200)
         return Response("An error has happened, please try again!", status=400)
 
 

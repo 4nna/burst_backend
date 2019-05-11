@@ -22,6 +22,7 @@ class DetailUserSerializer(serializers.ModelSerializer):
 
 class UpdateUserSerializer(serializers.ModelSerializer):
     current_location = LocationSerializer(many=False, write_only=True)
+
     class Meta:
         model = User
         fields = ['matchable', 'current_location']
