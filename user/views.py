@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from rest_framework import status, generics, permissions, mixins
 from rest_framework.response import Response
 
+from location.models import Location
 from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
 
 User = get_user_model()
@@ -21,12 +22,15 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
         Update status and current location of user. Authentication required.
         """
         if not request.user.is_authenticated:
-            return HttpResponse(status=400)
-        serialized = UpdateUserSerializer(request.data)
+            return Response("You have to log yourself in", status=403)
+        serialized = UpdateUserSerializer(data=request.data)
         if serialized.is_valid():
-            serialized.save()
-            return HttpResponse(status=200)
-        return HttpResponse(status=400)
+            user = request.user
+            user.matchable = serialized['matchable']
+            user.current_location = Location(serialized['current_location'])
+            user.save()
+            return Response(serialized, status=200)
+        return Response("An error has happened, please try again!", status=400)
 
 
 class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
@@ -64,9 +68,9 @@ class Register(generics.CreateAPIView):
         serialized = RegisterUserSerializer(data=request.data)
         if serialized.is_valid():
             User.objects.create_user(
-                serialized.init_data['email'],
-                serialized.init_data['username'],
-                serialized.init_data['password']
+                serialized.data['email'],
+                serialized.data['username'],
+                serialized.data['password']
             )
             return Response(serialized.data, status=status.HTTP_201_CREATED)
         else:

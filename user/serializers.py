@@ -19,9 +19,15 @@ class DetailUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email', 'matchable', 'current_location']
 
+    def validate(self, attrs):
+        return attrs
+
 
 class UpdateUserSerializer(serializers.ModelSerializer):
     current_location = LocationSerializer(many=False, write_only=True)
     class Meta:
         model = User
         fields = ['matchable', 'current_location']
+
+    def validate(self, attrs):
+        return attrs
