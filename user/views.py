@@ -9,9 +9,22 @@ from rest_framework.utils import json
 from rest_framework_jwt.serializers import jwt_payload_handler
 
 import user
-from user.serializers import RegisterUserSerializer, DetailUserSerializer
+from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
 
 User = get_user_model()
+
+
+class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
+    queryset = User.objects.all()
+    permissions = [permissions.IsAuthenticated]
+    serializer_class = UpdateUserSerializer
+
+    def post(self, request, *args, **kwargs):
+        serialized = UpdateUserSerializer(request.data)
+        if serialized.is_valid():
+            serialized.save()
+            return HttpResponse(status=200)
+        return HttpResponse(status=400)
 
 
 class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
