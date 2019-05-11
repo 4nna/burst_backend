@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, generics, permissions, mixins
 from rest_framework.response import Response
 
-from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
+from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer, SimpleUserSerializer
 from location.models import distance, CENTER, RADIUS, Location
 
 User = get_user_model()
@@ -33,7 +33,7 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
     """
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
-    serializer_class = UpdateUserSerializer
+    serializer_class = SimpleUserSerializer
 
     def post(self, request, *args, **kwargs):
         """
@@ -41,7 +41,7 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
         """
         if not request.user.is_authenticated:
             return Response("You have to log yourself in", status=403)
-        serialized = UpdateUserSerializer(data=request.data)
+        serialized = SimpleUserSerializer(data=request.data)
         if serialized.is_valid():
             user = request.user
             location_dict = serialized.data['current_location']
