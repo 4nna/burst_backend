@@ -19,11 +19,11 @@ class DetailUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'matchable', 'current_location']
+        fields = ['username', 'email', 'matchable', 'current_location', 'other_user']
 
 
 class UpdateUserSerializer(serializers.ModelSerializer):
-    current_location = LocationSerializer(many=False, write_only=True)
+    current_location = LocationSerializer(many=False)
 
     class Meta:
         model = User

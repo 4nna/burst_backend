@@ -4,11 +4,23 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, generics, permissions, mixins
 from rest_framework.response import Response
 
-from location.models import Location
 from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
+from location.models import distance, CENTER, RADIUS, Location
 
 User = get_user_model()
+
 available_users = deque()
+
+
+class CountOnline(generics.RetrieveAPIView):
+    """
+    Number of users who are matchable in the meeting zone
+    """
+    def get(self, request, *args, **kwargs):
+        """
+        Number of users who are matchable in the meeting zone
+        """
+        return Response(f'Number of available users {len(available_users)}', status=200)
 
 
 class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
@@ -28,14 +40,28 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
         serialized = UpdateUserSerializer(data=request.data)
         if serialized.is_valid():
             user = request.user
-            user.matchable = serialized['matchable']
-            user.current_location = Location(serialized['current_location'])
+            location_dict = serialized.data['current_location']
+            matchable = serialized.data['matchable']
+            user.matchable = matchable
+            location = Location(longtitude=location_dict['longtitude'], latitude=location_dict['latitude'])
+            location.save()
+            user.current_location = location
             user.save()
-            if len(available_users) > 0:
-                candidate = deque.pop(available_users)
-            else:
-                return Response("There are currently no user around", status=200)
-        return Response("An error has happened, please try again!", status=400)
+            if user.current_location is not None and distance(CENTER,
+                                                              user.current_location) > RADIUS and user.matchable:
+                if len(available_users) > 0:
+                    candidate = available_users.pop()
+                    user.other_user = candidate
+                    candidate.other_user = user
+                    user.matchable = False
+                    candidate.matchable = False
+                    candidate.save()
+                    user.save()
+                elif user.matchable:
+                    available_users.append(user)
+            serialized = UpdateUserSerializer(user)
+            return Response(serialized.data, status=200)
+        return Response("Invalid request", status=400)
 
 
 class Detail(mixins.RetrieveModelMixin, generics.GenericAPIView):
@@ -77,6 +103,7 @@ class Register(generics.CreateAPIView):
                 username=serialized.data['username'],
                 password=serialized.data['password']
             )
+            user.is_staff = True
             user.save()
             return Response("User created successfully", status=status.HTTP_201_CREATED)
         else:
