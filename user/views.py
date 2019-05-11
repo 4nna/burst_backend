@@ -1,20 +1,29 @@
+import jwt
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework import status, generics, permissions
+from django.core import serializers
+from django.http import HttpResponse
+from rest_framework import status, generics, permissions, mixins
 from rest_framework.response import Response
 from rest_framework.utils import json
+from rest_framework_jwt.serializers import jwt_payload_handler
 
-from user.serializers import RegisterUserSerializer
+import user
+from user.serializers import RegisterUserSerializer, DetailUserSerializer
 
 User = get_user_model()
 
 
-class Detail(generics.RetrieveAPIView):
+class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DetailUserSerializer
 
-    def get(self, request, *args, **kwargs) -> User:
-        user = request.user
-        return Response(json.dumps(user))
+    def get(self, request, *args, **kwargs):
+        id = request.GET.get('id', None)
+        if id is not None:
+            return self.retrieve(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class Register(generics.CreateAPIView):
