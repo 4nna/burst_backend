@@ -7,6 +7,6 @@ schema_view = get_swagger_view(title='Burst API')
 
 urlpatterns = [
     path('', schema_view),
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='admin'),
     path('user/', include('user.urls'))
 ]
