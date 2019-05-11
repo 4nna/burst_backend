@@ -47,12 +47,19 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
             location_dict = serialized.data['current_location']
             matchable = serialized.data['matchable']
             user.matchable = matchable
+            if not user.matchable:
+                user.other_user.other_user = None
+                user.other_user.save()
+                user.other_user = None
+                user.save()
+                serialized = UpdateUserSerializer(user)
+                return Response(serialized.data, status=200)
             location = Location(longtitude=location_dict['longtitude'], latitude=location_dict['latitude'])
             location.save()
             user.current_location = location
             user.save()
             if user.current_location is not None and distance(CENTER,
-                                                              user.current_location) > RADIUS and user.matchable:
+                                                              user.current_location) < RADIUS and user.matchable:
                 if len(available_users) > 0:
                     candidate = available_users.pop()
                     user.other_user = candidate
