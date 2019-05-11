@@ -1,7 +1,11 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from rest_framework import status, generics, permissions, mixins
+from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.response import Response
+from rest_framework_swagger.renderers import SwaggerUIRenderer
 
 from location.models import Location
 from user.serializers import RegisterUserSerializer, DetailUserSerializer, UpdateUserSerializer
@@ -33,7 +37,7 @@ class Update(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateMo
         return Response("An error has happened, please try again!", status=400)
 
 
-class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
+class Detail(mixins.RetrieveModelMixin, generics.GenericAPIView):
     """
     Get user's detail after logging in
     """
@@ -46,11 +50,11 @@ class Detail(mixins.RetrieveModelMixin, generics.ListAPIView):
         Return detail of every user. Authentication required.
         """
         if not request.user.is_authenticated:
-            return HttpResponse(status=400)
-        id = request.GET.get('id', None)
-        if id is not None:
-            return self.retrieve(request, *args, **kwargs)
-        return super().get(request, *args, **kwargs)
+            return Response("Please authenticate yourself", status=403)
+        else:
+            user = self.queryset.get(username=request.user)
+            serialized = DetailUserSerializer(user)
+            return Response(data=serialized.data, status=200)
 
 
 class Register(generics.CreateAPIView):
@@ -61,6 +65,7 @@ class Register(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
 
+    @renderer_classes([SwaggerUIRenderer])
     def post(self, request, *args, **kwargs):
         """
         Create a new user with email, username, password
